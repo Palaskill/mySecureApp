@@ -367,6 +367,51 @@ app.post('/api/admin/reapprove-account', authenticateJWT, requireAdmin, async (r
   }
 });
 
+// Change user password (admin only)
+app.post('/api/admin/change-user-password', authenticateJWT, requireAdmin, async (req, res) => {
+  try {
+    const { userId, newPassword } = req.body;
+
+    // Validate input
+    if (!userId || !newPassword) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    // Check if user exists
+    const [existingUsers] = await db.query(
+      'SELECT id FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (existingUsers.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Don't allow changing own password through this endpoint
+    if (existingUsers[0].id === req.user.userId) {
+      return res.status(403).json({ message: 'Cannot modify own password through this endpoint' });
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update user's password
+    const [result] = await db.query(
+      'UPDATE users SET password = ? WHERE id = ?',
+      [hashedPassword, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ message: 'Error changing password' });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

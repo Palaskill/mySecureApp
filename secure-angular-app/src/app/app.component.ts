@@ -38,6 +38,7 @@ import { AuthService } from './services/auth.service';
       </nav>
       <main [class.with-nav]="authService.isAuthenticated()">
         <router-outlet></router-outlet>
+        <app-toast></app-toast>
       </main>
     </div>
   `,
@@ -200,6 +201,7 @@ import { AuthService } from './services/auth.service';
       height: calc(100vh - 64px);
       overflow-y: auto;
       width: 100%;
+      position: relative;
     }
 
     main.with-nav {

@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { AdminService, UserRole, PendingSignup, User } from '../../services/admin.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-home',
@@ -14,11 +15,15 @@ export class HomeComponent {
   pendingSignups: (PendingSignup & { selectedRole: UserRole })[] = [];
   rejectedAccounts: (PendingSignup & { selectedRole: UserRole })[] = [];
   users: (User & { newRole: UserRole })[] = [];
+  selectedUser: User | null = null;
+  showPasswordDialog = false;
+  newPassword = '';
 
   constructor(
     private router: Router,
     private authService: AuthService,
-    private adminService: AdminService
+    private adminService: AdminService,
+    private toastService: ToastService
   ) {
     this.isAdmin = this.authService.isAdmin();
     if (this.isAdmin) {
@@ -26,6 +31,8 @@ export class HomeComponent {
       this.loadRejectedAccounts();
       this.loadUsers();
     }
+    // Test toast on component init
+    this.toastService.showInfo('Component initialized');
   }
 
   getCurrentDateTime(): string {
@@ -59,7 +66,7 @@ export class HomeComponent {
       next: (users: User[]) => {
         this.users = users.map((user: User) => ({
           ...user,
-          newRole: user.role as UserRole
+          newRole: user.role.toLowerCase() as UserRole // Convert to lowercase to match enum values
         }));
       }
     });
@@ -104,5 +111,31 @@ export class HomeComponent {
         this.loadUsers();
       }
     });
+  }
+
+  openChangePasswordDialog(user: User) {
+    this.selectedUser = user;
+    this.showPasswordDialog = true;
+    this.newPassword = '';
+  }
+
+  closePasswordDialog() {
+    this.selectedUser = null;
+    this.showPasswordDialog = false;
+    this.newPassword = '';
+  }
+
+  changePassword() {
+    if (this.selectedUser && this.newPassword) {
+      this.adminService.changeUserPassword(this.selectedUser.id, this.newPassword).subscribe({
+        next: () => {
+          this.toastService.showSuccess(`Password successfully changed for ${this.selectedUser?.email}`);
+          this.closePasswordDialog();
+        },
+        error: (error) => {
+          this.toastService.showError('Error changing password: ' + (error.error?.message || 'Unknown error'));
+        }
+      });
+    }
   }
 } 

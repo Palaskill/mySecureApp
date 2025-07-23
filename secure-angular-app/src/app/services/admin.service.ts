@@ -3,11 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export enum UserRole {
-  USER = 'User',
-  OPERATOR = 'Operator',
-  BOSS = 'Boss',
-  CHIEF = 'Chief',
-  ADMIN = 'Admin'
+  USER = 'user',
+  OPERATOR = 'operator',
+  BOSS = 'boss',
+  CHIEF = 'chief',
+  ADMIN = 'admin'
 }
 
 export interface User {
@@ -60,5 +60,9 @@ export class AdminService {
 
   updateUser(id: number, status: 'active' | 'inactive', role: UserRole): Observable<any> {
     return this.http.post(`${this.apiUrl}/update-user`, { id, status, role });
+  }
+
+  changeUserPassword(userId: number, newPassword: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/change-user-password`, { userId, newPassword });
   }
 } 
