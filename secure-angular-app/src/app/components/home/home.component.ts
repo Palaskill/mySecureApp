@@ -18,6 +18,16 @@ export class HomeComponent {
   selectedUser: User | null = null;
   showPasswordDialog = false;
   newPassword = '';
+  showRoleSelect = false;
+  selectedRoleIndex = -1;
+
+  roleOptions = [
+    { value: UserRole.USER, icon: 'fa-user', label: 'User' },
+    { value: UserRole.OPERATOR, icon: 'fa-cogs', label: 'Operator' },
+    { value: UserRole.BOSS, icon: 'fa-briefcase', label: 'Boss' },
+    { value: UserRole.CHIEF, icon: 'fa-crown', label: 'Chief' },
+    { value: UserRole.ADMIN, icon: 'fa-shield-alt', label: 'Admin' }
+  ];
 
   constructor(
     private router: Router,
@@ -31,8 +41,30 @@ export class HomeComponent {
       this.loadRejectedAccounts();
       this.loadUsers();
     }
-    // Test toast on component init
-    this.toastService.showInfo('Component initialized');
+  }
+
+  toggleRoleSelect(index: number) {
+    this.selectedRoleIndex = this.selectedRoleIndex === index ? -1 : index;
+  }
+
+  selectRole(user: User & { newRole: UserRole }, role: UserRole) {
+    user.newRole = role;
+    this.selectedRoleIndex = -1;
+    this.updateUser(user);
+  }
+
+  selectRoleForAccount(account: PendingSignup & { selectedRole: UserRole }, role: UserRole) {
+    account.selectedRole = role;
+    this.selectedRoleIndex = -1;
+  }
+
+  getRoleIcon(role: UserRole): string {
+    const option = this.roleOptions.find(opt => opt.value === role);
+    return option ? option.icon : 'fa-user';
+  }
+
+  getRoleClass(role: UserRole): string {
+    return role.toLowerCase();
   }
 
   getCurrentDateTime(): string {

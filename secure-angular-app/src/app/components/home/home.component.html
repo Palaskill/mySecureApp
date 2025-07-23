@@ -60,6 +60,77 @@
 
   <!-- Admin Section -->
   <div *ngIf="isAdmin" class="admin-section">
+    <!-- Existing Users Section -->
+    <div class="admin-card">
+      <div class="section-header">
+        <h2>Existing Users</h2>
+        <p>Manage user accounts and privileges</p>
+      </div>
+
+      <div class="users-list" *ngIf="users.length > 0">
+        <div class="user-card" *ngFor="let user of users">
+          <div class="user-info">
+            <div class="email">
+              <i class="fas fa-user"></i>
+              {{ user.email }}
+            </div>
+            <div class="details">
+              <span class="role">
+                <i class="fas fa-shield-alt"></i>
+                {{ user.role.charAt(0).toUpperCase() + user.role.slice(1) }}
+              </span>
+              <span class="status" [class.active]="user.status === 'active'">
+                <i class="fas fa-circle"></i>
+                {{ user.status }}
+              </span>
+              <span class="date">
+                <i class="fas fa-calendar"></i>
+                {{ user.created_at | date:'mediumDate' }}
+              </span>
+            </div>
+          </div>
+          <div class="user-actions">
+            <div class="role-select" (clickOutside)="selectedRoleIndex = -1">
+              <div class="selected-option" [class]="getRoleClass(user.newRole)" (click)="toggleRoleSelect(user.id)">
+                <i class="fas" [class]="getRoleIcon(user.newRole)"></i>
+                <span>{{ user.newRole }}</span>
+                <i class="fas fa-chevron-down dropdown-arrow"></i>
+              </div>
+              <div class="options-dropdown" *ngIf="selectedRoleIndex === user.id">
+                <div 
+                  class="option" 
+                  *ngFor="let option of roleOptions"
+                  [class]="getRoleClass(option.value)"
+                  (click)="selectRole(user, option.value)"
+                >
+                  <i class="fas" [class]="option.icon"></i>
+                  <span>{{ option.label }}</span>
+                </div>
+              </div>
+            </div>
+            <button 
+              class="btn" 
+              [class.btn-deactivate]="user.status === 'active'"
+              [class.btn-activate]="user.status === 'inactive'"
+              (click)="toggleUserStatus(user)"
+            >
+              <i class="fas" [class.fa-lock]="user.status === 'active'" [class.fa-unlock]="user.status === 'inactive'"></i>
+              {{ user.status === 'active' ? 'Deactivate' : 'Activate' }}
+            </button>
+            <button class="btn btn-password" (click)="openChangePasswordDialog(user)">
+              <i class="fas fa-key"></i>
+              Change Password
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="no-users" *ngIf="users.length === 0">
+        <i class="fas fa-users"></i>
+        <p>No users found</p>
+      </div>
+    </div>
+
     <!-- Pending Signups Section -->
     <div class="admin-card">
       <div class="section-header">
@@ -135,14 +206,23 @@
             </div>
           </div>
           <div class="request-actions">
-            <div class="role-select">
-              <select [(ngModel)]="account.selectedRole">
-                <option [value]="UserRole.USER">User</option>
-                <option [value]="UserRole.OPERATOR">Operator</option>
-                <option [value]="UserRole.BOSS">Boss</option>
-                <option [value]="UserRole.CHIEF">Chief</option>
-                <option [value]="UserRole.ADMIN">Admin</option>
-              </select>
+            <div class="role-select" (clickOutside)="selectedRoleIndex = -1">
+              <div class="selected-option" [class]="getRoleClass(account.selectedRole)" (click)="toggleRoleSelect(account.id)">
+                <i class="fas" [class]="getRoleIcon(account.selectedRole)"></i>
+                <span>{{ account.selectedRole }}</span>
+                <i class="fas fa-chevron-down dropdown-arrow"></i>
+              </div>
+              <div class="options-dropdown" *ngIf="selectedRoleIndex === account.id">
+                <div 
+                  class="option" 
+                  *ngFor="let option of roleOptions"
+                  [class]="getRoleClass(option.value)"
+                  (click)="selectRoleForAccount(account, option.value)"
+                >
+                  <i class="fas" [class]="option.icon"></i>
+                  <span>{{ option.label }}</span>
+                </div>
+              </div>
             </div>
             <button class="btn btn-approve" (click)="reapproveAccount(account)">
               <i class="fas fa-redo"></i> Reapprove
@@ -154,68 +234,6 @@
       <div class="no-requests" *ngIf="rejectedAccounts.length === 0">
         <i class="fas fa-ban"></i>
         <p>No rejected accounts</p>
-      </div>
-    </div>
-
-    <!-- Existing Users Section -->
-    <div class="admin-card">
-      <div class="section-header">
-        <h2>Existing Users</h2>
-        <p>Manage user accounts and privileges</p>
-      </div>
-
-      <div class="users-list" *ngIf="users.length > 0">
-        <div class="user-card" *ngFor="let user of users">
-          <div class="user-info">
-            <div class="email">
-              <i class="fas fa-user"></i>
-              {{ user.email }}
-            </div>
-            <div class="details">
-              <span class="role">
-                <i class="fas fa-shield-alt"></i>
-                {{ user.role.charAt(0).toUpperCase() + user.role.slice(1) }}
-              </span>
-              <span class="status" [class.active]="user.status === 'active'">
-                <i class="fas fa-circle"></i>
-                {{ user.status }}
-              </span>
-              <span class="date">
-                <i class="fas fa-calendar"></i>
-                {{ user.created_at | date:'mediumDate' }}
-              </span>
-            </div>
-          </div>
-          <div class="user-actions">
-            <div class="role-select">
-              <select [(ngModel)]="user.newRole" (change)="updateUser(user)">
-                <option [value]="UserRole.USER">User</option>
-                <option [value]="UserRole.OPERATOR">Operator</option>
-                <option [value]="UserRole.BOSS">Boss</option>
-                <option [value]="UserRole.CHIEF">Chief</option>
-                <option [value]="UserRole.ADMIN">Admin</option>
-              </select>
-            </div>
-            <button 
-              class="btn" 
-              [class.btn-deactivate]="user.status === 'active'"
-              [class.btn-activate]="user.status === 'inactive'"
-              (click)="toggleUserStatus(user)"
-            >
-              <i class="fas" [class.fa-lock]="user.status === 'active'" [class.fa-unlock]="user.status === 'inactive'"></i>
-              {{ user.status === 'active' ? 'Deactivate' : 'Activate' }}
-            </button>
-            <button class="btn btn-password" (click)="openChangePasswordDialog(user)">
-              <i class="fas fa-key"></i>
-              Change Password
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="no-users" *ngIf="users.length === 0">
-        <i class="fas fa-users"></i>
-        <p>No users found</p>
       </div>
     </div>
   </div>

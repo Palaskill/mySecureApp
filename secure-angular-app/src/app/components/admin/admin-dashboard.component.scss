@@ -97,24 +97,67 @@
   }
 }
 
-.request-actions, .user-actions {
+.user-actions, .request-actions {
   display: flex;
   align-items: center;
   gap: 12px;
-}
 
-.role-select select {
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #2d3748;
-  font-size: 14px;
-  cursor: pointer;
-  outline: none;
+  .role-select {
+    position: relative;
+    min-width: 180px;
 
-  &:focus {
-    border-color: #667eea;
+    &::after {
+      content: '\f078';
+      font-family: 'Font Awesome 5 Free';
+      font-weight: 900;
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #667eea;
+      pointer-events: none;
+      font-size: 14px;
+      z-index: 1;
+    }
+
+    select {
+      width: 100%;
+      padding: 14px 45px 14px 20px;
+      border-radius: 12px;
+      border: 2px solid #e2e8f0;
+      background: white;
+      color: #2d3748;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+      &:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+      }
+
+      &:hover {
+        border-color: #667eea;
+        background-color: #f7fafc;
+      }
+
+      option {
+        padding: 12px;
+        font-size: 15px;
+        background: white;
+        color: #2d3748;
+      }
+    }
+  }
+
+  button {
+    height: 48px; // Match select height
   }
 }
 

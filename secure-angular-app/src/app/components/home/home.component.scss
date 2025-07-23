@@ -186,19 +186,166 @@
   gap: 12px;
 }
 
-.role-select select {
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #2d3748;
-  font-size: 14px;
-  cursor: pointer;
-  outline: none;
+.role-select {
+  position: relative;
+  min-width: 180px;
 
-  &:focus {
-    border-color: #667eea;
+  .selected-option {
+    height: 37px;
+    padding: 0 35px;
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    position: relative;
+    background: white;
+
+    &:hover {
+      border-color: #667eea;
+    }
+
+    i:first-child {
+      position: absolute;
+      left: 12px;
+      font-size: 14px;
+    }
+
+    .dropdown-arrow {
+      position: absolute;
+      right: 12px;
+      font-size: 12px;
+      color: #667eea;
+    }
+
+    span {
+      flex: 1;
+    }
+
+    // Role-specific styles
+    &.user {
+      color: #4299e1;
+      background-color: #ebf8ff;
+      i:first-child { color: #4299e1; }
+    }
+    
+    &.operator {
+      color: #48bb78;
+      background-color: #f0fff4;
+      i:first-child { color: #48bb78; }
+    }
+    
+    &.boss {
+      color: #805ad5;
+      background-color: #faf5ff;
+      i:first-child { color: #805ad5; }
+    }
+    
+    &.chief {
+      color: #d69e2e;
+      background-color: #fffff0;
+      i:first-child { color: #d69e2e; }
+    }
+    
+    &.admin {
+      color: #e53e3e;
+      background-color: #fff5f5;
+      i:first-child { color: #e53e3e; }
+    }
   }
+
+  .options-dropdown {
+    position: absolute;
+    bottom: 100%; // Change from top to bottom
+    left: 0;
+    right: 0;
+    margin-bottom: 4px; // Change from margin-top to margin-bottom
+    background: white;
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1); // Adjust shadow direction
+    z-index: 1000;
+    overflow: hidden;
+
+    .option {
+      padding: 8px 35px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      position: relative;
+      transition: all 0.2s ease;
+
+      i {
+        position: absolute;
+        left: 12px;
+        font-size: 14px;
+      }
+
+      &:hover {
+        filter: brightness(0.95);
+      }
+
+      // Role-specific styles
+      &.user {
+        color: #4299e1;
+        background-color: #ebf8ff;
+        i { color: #4299e1; }
+      }
+      
+      &.operator {
+        color: #48bb78;
+        background-color: #f0fff4;
+        i { color: #48bb78; }
+      }
+      
+      &.boss {
+        color: #805ad5;
+        background-color: #faf5ff;
+        i { color: #805ad5; }
+      }
+      
+      &.chief {
+        color: #d69e2e;
+        background-color: #fffff0;
+        i { color: #d69e2e; }
+      }
+      
+      &.admin {
+        color: #e53e3e;
+        background-color: #fff5f5;
+        i { color: #e53e3e; }
+      }
+    }
+  }
+}
+
+// Ensure consistent spacing in both sections
+.request-actions, .user-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative; // Add this to establish a new stacking context
+
+  .role-select {
+    min-width: 180px;
+  }
+
+  button {
+    height: 37px;
+    padding: 0 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+// Add styles for user cards to ensure proper layering
+.user-card, .request-card {
+  position: relative;
+  z-index: 1;
 }
 
 .btn {
