@@ -19,7 +19,8 @@ export class HomeComponent {
   showPasswordDialog = false;
   newPassword = '';
   showRoleSelect = false;
-  selectedRoleIndex = -1;
+  selectedUserRoleIndex = -1;  // For Existing Users section
+  selectedRejectedRoleIndex = -1;  // For Rejected Accounts section
 
   roleOptions = [
     { value: UserRole.USER, icon: 'fa-user', label: 'User' },
@@ -43,19 +44,25 @@ export class HomeComponent {
     }
   }
 
-  toggleRoleSelect(index: number) {
-    this.selectedRoleIndex = this.selectedRoleIndex === index ? -1 : index;
+  toggleUserRoleSelect(index: number) {
+    this.selectedUserRoleIndex = this.selectedUserRoleIndex === index ? -1 : index;
+    this.selectedRejectedRoleIndex = -1; // Close other section's dropdowns
+  }
+
+  toggleRejectedRoleSelect(index: number) {
+    this.selectedRejectedRoleIndex = this.selectedRejectedRoleIndex === index ? -1 : index;
+    this.selectedUserRoleIndex = -1; // Close other section's dropdowns
   }
 
   selectRole(user: User & { newRole: UserRole }, role: UserRole) {
     user.newRole = role;
-    this.selectedRoleIndex = -1;
+    this.selectedUserRoleIndex = -1;
     this.updateUser(user);
   }
 
   selectRoleForAccount(account: PendingSignup & { selectedRole: UserRole }, role: UserRole) {
     account.selectedRole = role;
-    this.selectedRoleIndex = -1;
+    this.selectedRejectedRoleIndex = -1;
   }
 
   getRoleIcon(role: UserRole): string {

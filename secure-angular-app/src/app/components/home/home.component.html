@@ -90,13 +90,13 @@
             </div>
           </div>
           <div class="user-actions">
-            <div class="role-select" (clickOutside)="selectedRoleIndex = -1">
-              <div class="selected-option" [class]="getRoleClass(user.newRole)" (click)="toggleRoleSelect(user.id)">
+            <div class="role-select" (clickOutside)="selectedUserRoleIndex = -1">
+              <div class="selected-option" [class]="getRoleClass(user.newRole)" (click)="toggleUserRoleSelect(user.id)">
                 <i class="fas" [class]="getRoleIcon(user.newRole)"></i>
                 <span>{{ user.newRole }}</span>
                 <i class="fas fa-chevron-down dropdown-arrow"></i>
               </div>
-              <div class="options-dropdown" *ngIf="selectedRoleIndex === user.id">
+              <div class="options-dropdown" *ngIf="selectedUserRoleIndex === user.id">
                 <div 
                   class="option" 
                   *ngFor="let option of roleOptions"
@@ -206,13 +206,13 @@
             </div>
           </div>
           <div class="request-actions">
-            <div class="role-select" (clickOutside)="selectedRoleIndex = -1">
-              <div class="selected-option" [class]="getRoleClass(account.selectedRole)" (click)="toggleRoleSelect(account.id)">
+            <div class="role-select" (clickOutside)="selectedRejectedRoleIndex = -1">
+              <div class="selected-option" [class]="getRoleClass(account.selectedRole)" (click)="toggleRejectedRoleSelect(account.id)">
                 <i class="fas" [class]="getRoleIcon(account.selectedRole)"></i>
                 <span>{{ account.selectedRole }}</span>
                 <i class="fas fa-chevron-down dropdown-arrow"></i>
               </div>
-              <div class="options-dropdown" *ngIf="selectedRoleIndex === account.id">
+              <div class="options-dropdown" *ngIf="selectedRejectedRoleIndex === account.id">
                 <div 
                   class="option" 
                   *ngFor="let option of roleOptions"
