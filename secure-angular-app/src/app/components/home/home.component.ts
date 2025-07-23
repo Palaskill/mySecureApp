@@ -4,6 +4,8 @@ import { AuthService } from '../../services/auth.service';
 import { AdminService, UserRole, PendingSignup, User } from '../../services/admin.service';
 import { ToastService } from '../../services/toast.service';
 
+type AdminSection = 'users' | 'pending' | 'rejected';
+
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
@@ -21,6 +23,7 @@ export class HomeComponent {
   showRoleSelect = false;
   selectedUserRoleIndex = -1;  // For Existing Users section
   selectedRejectedRoleIndex = -1;  // For Rejected Accounts section
+  currentSection: AdminSection = 'users';  // Default to users section
 
   roleOptions = [
     { value: UserRole.USER, icon: 'fa-user', label: 'User' },
@@ -176,5 +179,12 @@ export class HomeComponent {
         }
       });
     }
+  }
+
+  setCurrentSection(section: AdminSection) {
+    this.currentSection = section;
+    // Reset any open dropdowns when switching sections
+    this.selectedUserRoleIndex = -1;
+    this.selectedRejectedRoleIndex = -1;
   }
 } 

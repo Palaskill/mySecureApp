@@ -58,186 +58,242 @@
     </div>
   </div>
 
-  <!-- Admin Section -->
-  <div *ngIf="isAdmin" class="admin-section">
-    <!-- Existing Users Section -->
-    <div class="admin-card">
-      <div class="section-header">
-        <h2>Existing Users</h2>
-        <p>Manage user accounts and privileges</p>
+  <!-- Admin Section with Sidebar -->
+  <div *ngIf="isAdmin" class="admin-layout">
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <i class="fas fa-th-large"></i>
+        <span>Admin Dashboard</span>
       </div>
+      <nav class="sidebar-nav">
+        <div 
+          class="nav-item" 
+          [class.active]="currentSection === 'users'"
+          (click)="setCurrentSection('users')"
+        >
+          <div class="nav-item-content">
+            <i class="fas fa-users"></i>
+            <span class="nav-item-text">Existing Users</span>
+          </div>
+          <span class="badge" *ngIf="users.length > 0">{{users.length}}</span>
+        </div>
+        <div 
+          class="nav-item" 
+          [class.active]="currentSection === 'pending'"
+          (click)="setCurrentSection('pending')"
+        >
+          <div class="nav-item-content">
+            <i class="fas fa-user-clock"></i>
+            <span class="nav-item-text">Pending Signups</span>
+          </div>
+          <span class="badge" *ngIf="pendingSignups.length > 0">{{pendingSignups.length}}</span>
+        </div>
+        <div 
+          class="nav-item" 
+          [class.active]="currentSection === 'rejected'"
+          (click)="setCurrentSection('rejected')"
+        >
+          <div class="nav-item-content">
+            <i class="fas fa-user-times"></i>
+            <span class="nav-item-text">Rejected Accounts</span>
+          </div>
+          <span class="badge" *ngIf="rejectedAccounts.length > 0">{{rejectedAccounts.length}}</span>
+        </div>
+      </nav>
+    </div>
 
-      <div class="users-list" *ngIf="users.length > 0">
-        <div class="user-card" *ngFor="let user of users">
-          <div class="user-info">
-            <div class="email">
-              <i class="fas fa-user"></i>
-              {{ user.email }}
-            </div>
-            <div class="details">
-              <span class="role">
+    <!-- Sections Container -->
+    <div class="sections-container">
+      <!-- Existing Users Section -->
+      <div class="admin-card" [class.visible]="currentSection === 'users'">
+        <div class="section-header">
+          <h2>Existing Users</h2>
+          <p>Manage user accounts and privileges</p>
+        </div>
+
+        <div class="users-list" *ngIf="users.length > 0">
+          <div class="user-card" *ngFor="let user of users">
+            <div class="user-info">
+              <div class="info-item email">
+                <i class="fas fa-user"></i>
+                <div>
+                  <span class="label">Email</span>
+                  <span class="value">{{ user.email }}</span>
+                </div>
+              </div>
+              <div class="info-item role">
                 <i class="fas fa-shield-alt"></i>
-                {{ user.role.charAt(0).toUpperCase() + user.role.slice(1) }}
-              </span>
-              <span class="status" [class.active]="user.status === 'active'">
+                <div>
+                  <span class="label">Role</span>
+                  <span class="value">{{ user.role.charAt(0).toUpperCase() + user.role.slice(1) }}</span>
+                </div>
+              </div>
+              <div class="info-item status" [class.active]="user.status === 'active'">
                 <i class="fas fa-circle"></i>
-                {{ user.status }}
-              </span>
-              <span class="date">
-                <i class="fas fa-calendar"></i>
-                {{ user.created_at | date:'mediumDate' }}
-              </span>
-            </div>
-          </div>
-          <div class="user-actions">
-            <div class="role-select" (clickOutside)="selectedUserRoleIndex = -1">
-              <div class="selected-option" [class]="getRoleClass(user.newRole)" (click)="toggleUserRoleSelect(user.id)">
-                <i class="fas" [class]="getRoleIcon(user.newRole)"></i>
-                <span>{{ user.newRole }}</span>
-                <i class="fas fa-chevron-down dropdown-arrow"></i>
+                <div>
+                  <span class="label">Status</span>
+                  <span class="value">{{ user.status.charAt(0).toUpperCase() + user.status.slice(1) }}</span>
+                </div>
               </div>
-              <div class="options-dropdown" *ngIf="selectedUserRoleIndex === user.id">
-                <div 
-                  class="option" 
-                  *ngFor="let option of roleOptions"
-                  [class]="getRoleClass(option.value)"
-                  (click)="selectRole(user, option.value)"
-                >
-                  <i class="fas" [class]="option.icon"></i>
-                  <span>{{ option.label }}</span>
+              <div class="info-item date">
+                <i class="fas fa-calendar"></i>
+                <div>
+                  <span class="label">Created</span>
+                  <span class="value">{{ user.created_at | date:'mediumDate' }}</span>
                 </div>
               </div>
             </div>
-            <button 
-              class="btn" 
-              [class.btn-deactivate]="user.status === 'active'"
-              [class.btn-activate]="user.status === 'inactive'"
-              (click)="toggleUserStatus(user)"
-            >
-              <i class="fas" [class.fa-lock]="user.status === 'active'" [class.fa-unlock]="user.status === 'inactive'"></i>
-              {{ user.status === 'active' ? 'Deactivate' : 'Activate' }}
-            </button>
-            <button class="btn btn-password" (click)="openChangePasswordDialog(user)">
-              <i class="fas fa-key"></i>
-              Change Password
-            </button>
+            <div class="user-actions">
+              <div class="role-select" (clickOutside)="selectedUserRoleIndex = -1">
+                <div class="selected-option" [class]="getRoleClass(user.newRole)" (click)="toggleUserRoleSelect(user.id)">
+                  <i class="fas" [class]="getRoleIcon(user.newRole)"></i>
+                  <span>{{ user.newRole }}</span>
+                  <i class="fas fa-chevron-down dropdown-arrow"></i>
+                </div>
+                <div class="options-dropdown" *ngIf="selectedUserRoleIndex === user.id">
+                  <div 
+                    class="option" 
+                    *ngFor="let option of roleOptions"
+                    [class]="getRoleClass(option.value)"
+                    (click)="selectRole(user, option.value)"
+                  >
+                    <i class="fas" [class]="option.icon"></i>
+                    <span>{{ option.label }}</span>
+                  </div>
+                </div>
+              </div>
+              <button 
+                class="btn" 
+                [class.btn-deactivate]="user.status === 'active'"
+                [class.btn-activate]="user.status === 'inactive'"
+                (click)="toggleUserStatus(user)"
+              >
+                <i class="fas" [class.fa-lock]="user.status === 'active'" [class.fa-unlock]="user.status === 'inactive'"></i>
+                {{ user.status === 'active' ? 'Deactivate' : 'Activate' }}
+              </button>
+              <button class="btn btn-password" (click)="openChangePasswordDialog(user)">
+                <i class="fas fa-key"></i>
+                Change Password
+              </button>
+            </div>
           </div>
+        </div>
+
+        <div class="no-users" *ngIf="users.length === 0">
+          <i class="fas fa-users"></i>
+          <p>No users found</p>
         </div>
       </div>
 
-      <div class="no-users" *ngIf="users.length === 0">
-        <i class="fas fa-users"></i>
-        <p>No users found</p>
-      </div>
-    </div>
-
-    <!-- Pending Signups Section -->
-    <div class="admin-card">
-      <div class="section-header">
-        <h2>Pending Sign-up Requests</h2>
-        <p>Review and process new signup requests</p>
-      </div>
-
-      <div class="pending-requests" *ngIf="pendingSignups.length > 0">
-        <div class="request-card" *ngFor="let signup of pendingSignups">
-          <div class="request-info">
-            <div class="email">
-              <i class="fas fa-envelope"></i>
-              {{ signup.email }}
-            </div>
-            <div class="date">
-              <i class="fas fa-clock"></i>
-              {{ signup.requestDate | date:'medium' }}
-            </div>
-          </div>
-          <div class="request-actions">
-            <div class="role-select">
-              <select [(ngModel)]="signup.selectedRole">
-                <option [value]="UserRole.USER">User</option>
-                <option [value]="UserRole.OPERATOR">Operator</option>
-                <option [value]="UserRole.BOSS">Boss</option>
-                <option [value]="UserRole.CHIEF">Chief</option>
-                <option [value]="UserRole.ADMIN">Admin</option>
-              </select>
-            </div>
-            <button class="btn btn-approve" (click)="processSignup(signup.id, 'approve', signup.selectedRole)">
-              <i class="fas fa-check"></i> Approve
-            </button>
-            <button class="btn btn-reject" (click)="processSignup(signup.id, 'reject')">
-              <i class="fas fa-times"></i> Reject
-            </button>
-          </div>
+      <!-- Pending Signups Section -->
+      <div class="admin-card" [class.visible]="currentSection === 'pending'">
+        <div class="section-header">
+          <h2>Pending Sign-up Requests</h2>
+          <p>Review and process new signup requests</p>
         </div>
-      </div>
 
-      <div class="no-requests" *ngIf="pendingSignups.length === 0">
-        <i class="fas fa-inbox"></i>
-        <p>No pending signup requests</p>
-      </div>
-    </div>
-
-    <!-- Rejected Accounts Section -->
-    <div class="admin-card">
-      <div class="section-header">
-        <h2>Rejected Accounts</h2>
-        <p>Review and manage rejected accounts</p>
-      </div>
-
-      <div class="rejected-accounts" *ngIf="rejectedAccounts.length > 0">
-        <div class="request-card" *ngFor="let account of rejectedAccounts">
-          <div class="request-info">
-            <div class="email">
-              <i class="fas fa-user-times"></i>
-              {{ account.email }}
-            </div>
-            <div class="details">
-              <span class="date">
+        <div class="pending-requests" *ngIf="pendingSignups.length > 0">
+          <div class="request-card" *ngFor="let signup of pendingSignups">
+            <div class="request-info">
+              <div class="email">
+                <i class="fas fa-envelope"></i>
+                {{ signup.email }}
+              </div>
+              <div class="date">
                 <i class="fas fa-clock"></i>
-                Rejected: {{ account.requestDate | date:'medium' }}
-              </span>
-              <span class="date">
-                <i class="fas fa-calendar"></i>
-                Requested: {{ account.requestDate | date:'medium' }}
-              </span>
-              <span class="notes" *ngIf="account.notes">
-                <i class="fas fa-sticky-note"></i>
-                {{ account.notes }}
-              </span>
-            </div>
-          </div>
-          <div class="request-actions">
-            <div class="role-select" (clickOutside)="selectedRejectedRoleIndex = -1">
-              <div class="selected-option" [class]="getRoleClass(account.selectedRole)" (click)="toggleRejectedRoleSelect(account.id)">
-                <i class="fas" [class]="getRoleIcon(account.selectedRole)"></i>
-                <span>{{ account.selectedRole }}</span>
-                <i class="fas fa-chevron-down dropdown-arrow"></i>
-              </div>
-              <div class="options-dropdown" *ngIf="selectedRejectedRoleIndex === account.id">
-                <div 
-                  class="option" 
-                  *ngFor="let option of roleOptions"
-                  [class]="getRoleClass(option.value)"
-                  (click)="selectRoleForAccount(account, option.value)"
-                >
-                  <i class="fas" [class]="option.icon"></i>
-                  <span>{{ option.label }}</span>
-                </div>
+                {{ signup.requestDate | date:'medium' }}
               </div>
             </div>
-            <button class="btn btn-approve" (click)="reapproveAccount(account)">
-              <i class="fas fa-redo"></i> Reapprove
-            </button>
+            <div class="request-actions">
+              <div class="role-select">
+                <select [(ngModel)]="signup.selectedRole">
+                  <option [value]="UserRole.USER">User</option>
+                  <option [value]="UserRole.OPERATOR">Operator</option>
+                  <option [value]="UserRole.BOSS">Boss</option>
+                  <option [value]="UserRole.CHIEF">Chief</option>
+                  <option [value]="UserRole.ADMIN">Admin</option>
+                </select>
+              </div>
+              <button class="btn btn-approve" (click)="processSignup(signup.id, 'approve', signup.selectedRole)">
+                <i class="fas fa-check"></i> Approve
+              </button>
+              <button class="btn btn-reject" (click)="processSignup(signup.id, 'reject')">
+                <i class="fas fa-times"></i> Reject
+              </button>
+            </div>
           </div>
+        </div>
+
+        <div class="no-requests" *ngIf="pendingSignups.length === 0">
+          <i class="fas fa-inbox"></i>
+          <p>No pending signup requests</p>
         </div>
       </div>
 
-      <div class="no-requests" *ngIf="rejectedAccounts.length === 0">
-        <i class="fas fa-ban"></i>
-        <p>No rejected accounts</p>
+      <!-- Rejected Accounts Section -->
+      <div class="admin-card" [class.visible]="currentSection === 'rejected'">
+        <div class="section-header">
+          <h2>Rejected Accounts</h2>
+          <p>Review and manage rejected accounts</p>
+        </div>
+
+        <div class="rejected-accounts" *ngIf="rejectedAccounts.length > 0">
+          <div class="request-card" *ngFor="let account of rejectedAccounts">
+            <div class="request-info">
+              <div class="email">
+                <i class="fas fa-user-times"></i>
+                {{ account.email }}
+              </div>
+              <div class="details">
+                <span class="date">
+                  <i class="fas fa-clock"></i>
+                  Rejected: {{ account.requestDate | date:'medium' }}
+                </span>
+                <span class="date">
+                  <i class="fas fa-calendar"></i>
+                  Requested: {{ account.requestDate | date:'medium' }}
+                </span>
+                <span class="notes" *ngIf="account.notes">
+                  <i class="fas fa-sticky-note"></i>
+                  {{ account.notes }}
+                </span>
+              </div>
+            </div>
+            <div class="request-actions">
+              <div class="role-select" (clickOutside)="selectedRejectedRoleIndex = -1">
+                <div class="selected-option" [class]="getRoleClass(account.selectedRole)" (click)="toggleRejectedRoleSelect(account.id)">
+                  <i class="fas" [class]="getRoleIcon(account.selectedRole)"></i>
+                  <span>{{ account.selectedRole }}</span>
+                  <i class="fas fa-chevron-down dropdown-arrow"></i>
+                </div>
+                <div class="options-dropdown" *ngIf="selectedRejectedRoleIndex === account.id">
+                  <div 
+                    class="option" 
+                    *ngFor="let option of roleOptions"
+                    [class]="getRoleClass(option.value)"
+                    (click)="selectRoleForAccount(account, option.value)"
+                  >
+                    <i class="fas" [class]="option.icon"></i>
+                    <span>{{ option.label }}</span>
+                  </div>
+                </div>
+              </div>
+              <button class="btn btn-approve" (click)="reapproveAccount(account)">
+                <i class="fas fa-redo"></i> Reapprove
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="no-requests" *ngIf="rejectedAccounts.length === 0">
+          <i class="fas fa-ban"></i>
+          <p>No rejected accounts</p>
+        </div>
       </div>
     </div>
   </div>
-</div> 
+</div>
 
 <!-- Password Change Dialog -->
 <div class="modal-overlay" *ngIf="selectedUser && showPasswordDialog">
@@ -511,5 +567,238 @@
 
 .btn-secondary:hover {
   background-color: #616161;
+}
+
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 2rem;
+  background-color: #f5f7fa;
+}
+
+.admin-layout {
+  display: flex;
+  gap: 2rem;
+  margin-top: 2rem;
+  position: relative;
+}
+
+.sidebar {
+  width: 280px; /* Increased from 250px */
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 2rem;
+  flex-shrink: 0;
+  height: calc(100vh - 28rem);
+  min-height: 400px;
+  max-height: 600px;
+  display: flex;
+  flex-direction: column;
+  align-self: flex-start;
+}
+
+.sidebar-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 600;
+  color: #333;
+  flex-shrink: 0;
+}
+
+.sidebar-header i {
+  color: #2196F3;
+}
+
+.sidebar-nav {
+  padding: 1rem 0;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.nav-item {
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #666;
+  position: relative;
+  border-left: 3px solid transparent;
+  min-height: 3.5rem;
+}
+
+.nav-item:hover {
+  background: #f5f5f5;
+  color: #2196F3;
+  border-left-color: #2196F3;
+}
+
+.nav-item.active {
+  background: #e3f2fd;
+  color: #2196F3;
+  font-weight: 500;
+  border-left-color: #2196F3;
+}
+
+.nav-item.active .nav-item-text {
+  font-weight: 500;
+}
+
+/* Container for icon and text */
+.nav-item-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0; /* Allow text to shrink if needed */
+}
+
+/* Text container - adjusted margin */
+.nav-item-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 3rem; /* Increased space for badge */
+}
+
+.nav-item i {
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0; /* Prevent icon from shrinking */
+}
+
+.nav-item:hover i,
+.nav-item.active i {
+  color: #2196F3;
+}
+
+.badge {
+  position: absolute;
+  right: 1rem;
+  background: #ff4081;
+  color: white;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  min-width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .sidebar {
+    width: 260px; /* Slightly smaller on medium screens but still larger than original */
+  }
+
+  .nav-item {
+    padding: 1rem;
+  }
+  
+  .badge {
+    right: 0.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 250px; /* Original size for small screens */
+  }
+}
+
+.sections-container {
+  flex: 1;
+  position: relative;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-height: calc(100vh - 28rem);
+}
+
+.admin-card {
+  padding: 2rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  display: none;
+}
+
+.admin-card.visible {
+  opacity: 1;
+  visibility: visible;
+  display: block;
+}
+
+/* Content areas can expand beyond minimum height */
+.users-list, .pending-requests, .rejected-accounts {
+  min-height: calc(100% - 80px); /* Account for header as minimum */
+}
+
+.section-header {
+  margin-bottom: 2rem;
+}
+
+/* Ensure the dashboard grid spans full width */
+.dashboard-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.user-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+  border: 1px solid #e2e8f0;
+}
+
+.user-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-info .email {
+  font-size: 16px;
+  font-weight: 500;
+  color: #2d3748;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-info .email i {
+  color: #667eea;
+  font-size: 14px;
+}
+
+.user-info .details {
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+  color: #718096;
+  margin-left: 24px;
 }
 </style> 
