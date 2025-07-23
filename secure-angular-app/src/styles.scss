@@ -1,0 +1,203 @@
+/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+app-root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  overflow: auto;
+}
+
+/* Login specific styles */
+app-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  position: fixed;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+}
+
+/* Regular auth container for signup */
+.auth-container {
+  width: 100%;
+  max-width: 400px;
+  margin: auto;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.input-group {
+  width: 100%;
+  position: relative;
+
+  i {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a0aec0;
+    font-size: 18px;
+  }
+}
+
+.form-control {
+  width: 100%;
+  padding: 16px;
+  padding-left: 48px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.9);
+  
+  &:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+  }
+
+  &::placeholder {
+    color: #a0aec0;
+  }
+}
+
+.btn {
+  padding: 16px 32px;
+  border-radius: 12px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  font-size: 16px;
+  
+  &.btn-primary {
+    background: #667eea;
+    color: white;
+    border: none;
+    
+    &:hover {
+      background: #5a6fd6;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      background: #a0aec0;
+      cursor: not-allowed;
+      transform: none;
+    }
+  }
+  
+  &.btn-link {
+    background: none;
+    border: none;
+    color: #667eea;
+    text-decoration: none;
+    
+    &:hover {
+      color: #5a6fd6;
+      text-decoration: underline;
+    }
+  }
+}
+
+.form-group {
+  margin-bottom: 28px;
+  
+  label {
+    display: block;
+    margin-bottom: 12px;
+    color: #2d3748;
+    font-weight: 500;
+    font-size: 16px;
+  }
+}
+
+.invalid-feedback {
+  color: #e53e3e;
+  font-size: 14px;
+  margin-top: 8px;
+  padding-left: 16px;
+}
+
+.alert {
+  padding: 16px 20px;
+  border-radius: 12px;
+  margin-top: 24px;
+  
+  &.alert-danger {
+    background-color: #fff5f5;
+    border: 1px solid #feb2b2;
+    color: #c53030;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .auth-container {
+    max-width: 100%;
+    padding: 0 15px;
+  }
+  
+  .btn {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .auth-card {
+    padding: 24px;
+  }
+
+  .form-control {
+    font-size: 15px;
+    padding: 14px;
+    padding-left: 44px;
+  }
+}
+
+/* Card styles */
+.auth-card {
+  background: white;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}

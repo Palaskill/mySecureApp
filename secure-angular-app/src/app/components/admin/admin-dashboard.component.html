@@ -1,0 +1,106 @@
+<div class="admin-container">
+  <!-- Pending Signups Section -->
+  <div class="admin-card">
+    <div class="section-header">
+      <h2>Pending Sign-up Requests</h2>
+      <p>Review and process new signup requests</p>
+    </div>
+
+    <div class="pending-requests" *ngIf="pendingSignups.length > 0">
+      <div class="request-card" *ngFor="let signup of pendingSignups">
+        <div class="request-info">
+          <div class="email">
+            <i class="fas fa-envelope"></i>
+            {{ signup.email }}
+          </div>
+          <div class="date">
+            <i class="fas fa-clock"></i>
+            {{ signup.requestDate | date:'medium' }}
+          </div>
+        </div>
+        <div class="request-actions">
+          <div class="role-select">
+            <select [(ngModel)]="signup.selectedRole">
+              <option [value]="UserRole.USER">User</option>
+              <option [value]="UserRole.OPERATOR">Operator</option>
+              <option [value]="UserRole.BOSS">Boss</option>
+              <option [value]="UserRole.CHIEF">Chief</option>
+              <option [value]="UserRole.ADMIN">Admin</option>
+            </select>
+          </div>
+          <button class="btn btn-approve" (click)="processSignup(signup.id, 'approve', signup.selectedRole)">
+            <i class="fas fa-check"></i> Approve
+          </button>
+          <button class="btn btn-reject" (click)="processSignup(signup.id, 'reject')">
+            <i class="fas fa-times"></i> Reject
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="no-requests" *ngIf="pendingSignups.length === 0">
+      <i class="fas fa-inbox"></i>
+      <p>No pending signup requests</p>
+    </div>
+  </div>
+
+  <!-- Existing Users Section -->
+  <div class="admin-card">
+    <div class="section-header">
+      <h2>Existing Users</h2>
+      <p>Manage user accounts and privileges</p>
+    </div>
+
+    <div class="users-list" *ngIf="users.length > 0">
+      <div class="user-card" *ngFor="let user of users">
+        <div class="user-info">
+          <div class="email">
+            <i class="fas fa-user"></i>
+            {{ user.email }}
+          </div>
+          <div class="details">
+            <span class="role">
+              <i class="fas fa-shield-alt"></i>
+              {{ user.role }}
+            </span>
+            <span class="status" [class.active]="user.status === 'active'">
+              <i class="fas fa-circle"></i>
+              {{ user.status }}
+            </span>
+            <span class="date">
+              <i class="fas fa-calendar"></i>
+              {{ user.created_at | date:'mediumDate' }}
+            </span>
+          </div>
+        </div>
+        <div class="user-actions">
+          <div class="role-select">
+            <select [(ngModel)]="user.newRole" (change)="updateUser(user)">
+              <option [value]="UserRole.USER">User</option>
+              <option [value]="UserRole.OPERATOR">Operator</option>
+              <option [value]="UserRole.BOSS">Boss</option>
+              <option [value]="UserRole.CHIEF">Chief</option>
+              <option [value]="UserRole.ADMIN">Admin</option>
+            </select>
+          </div>
+          <button 
+            class="btn" 
+            [class.btn-deactivate]="user.status === 'active'"
+            [class.btn-activate]="user.status === 'inactive'"
+            (click)="toggleUserStatus(user)"
+          >
+            <i class="fas" [class.fa-lock]="user.status === 'active'" [class.fa-unlock]="user.status === 'inactive'"></i>
+            {{ user.status === 'active' ? 'Deactivate' : 'Activate' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="no-users" *ngIf="users.length === 0">
+      <i class="fas fa-users"></i>
+      <p>No users found</p>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">{{error}}</div>
+</div> 

@@ -1,0 +1,127 @@
+<div class="auth-container" [@slideAnimation]>
+  <div class="auth-card">
+    <div class="auth-header">
+      <h2>Sign Up</h2>
+      <p>Create your account</p>
+    </div>
+
+    <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <div class="input-group">
+          <i class="fas fa-envelope"></i>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            class="form-control"
+            [ngClass]="{ 'is-invalid': submitted && f['email'].errors }"
+            placeholder="Enter your email"
+          />
+        </div>
+        <div *ngIf="submitted && f['email'].errors" class="invalid-feedback">
+          <div *ngIf="f['email'].errors['required']">Email is required</div>
+          <div *ngIf="f['email'].errors['email']">Email must be valid</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="input-group">
+          <i class="fas fa-lock"></i>
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            formControlName="password"
+            class="form-control"
+            [ngClass]="{ 'is-invalid': submitted && f['password'].errors }"
+            placeholder="Create a password"
+            (input)="checkPasswordStrength()"
+          />
+          <button 
+            type="button" 
+            class="password-toggle" 
+            (click)="togglePasswordVisibility('password')"
+            [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+          >
+            <i class="fas" [class.fa-eye]="!showPassword" [class.fa-eye-slash]="showPassword"></i>
+          </button>
+        </div>
+        <div class="password-strength" [class.visible]="f['password'].value">
+          <div class="strength-meter">
+            <div class="strength-bar" [style.width.%]="passwordStrength.score * 25" [ngClass]="passwordStrength.class"></div>
+          </div>
+          <div class="strength-text" [ngClass]="passwordStrength.class">
+            {{ passwordStrength.message }}
+          </div>
+          <ul class="password-requirements">
+            <li [ngClass]="{ 'met': passwordChecks.length }">
+              <i class="fas" [ngClass]="passwordChecks.length ? 'fa-check' : 'fa-times'"></i>
+              8+ chars
+            </li>
+            <li [ngClass]="{ 'met': passwordChecks.uppercase }">
+              <i class="fas" [ngClass]="passwordChecks.uppercase ? 'fa-check' : 'fa-times'"></i>
+              Uppercase
+            </li>
+            <li [ngClass]="{ 'met': passwordChecks.lowercase }">
+              <i class="fas" [ngClass]="passwordChecks.lowercase ? 'fa-check' : 'fa-times'"></i>
+              Lowercase
+            </li>
+            <li [ngClass]="{ 'met': passwordChecks.number }">
+              <i class="fas" [ngClass]="passwordChecks.number ? 'fa-check' : 'fa-times'"></i>
+              Number
+            </li>
+            <li [ngClass]="{ 'met': passwordChecks.special }">
+              <i class="fas" [ngClass]="passwordChecks.special ? 'fa-check' : 'fa-times'"></i>
+              Special char
+            </li>
+          </ul>
+        </div>
+        <div *ngIf="submitted && f['password'].errors" class="invalid-feedback">
+          <div *ngIf="f['password'].errors['required']">Password is required</div>
+          <div *ngIf="f['password'].errors['minlength']">Password must be at least 8 characters</div>
+          <div *ngIf="f['password'].errors['weakPassword']">Password is too weak</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <div class="input-group">
+          <i class="fas fa-lock"></i>
+          <input
+            [type]="showConfirmPassword ? 'text' : 'password'"
+            id="confirmPassword"
+            formControlName="confirmPassword"
+            class="form-control"
+            [ngClass]="{ 'is-invalid': submitted && f['confirmPassword'].errors }"
+            placeholder="Confirm your password"
+          />
+          <button 
+            type="button" 
+            class="password-toggle" 
+            (click)="togglePasswordVisibility('confirm')"
+            [attr.aria-label]="showConfirmPassword ? 'Hide password' : 'Show password'"
+          >
+            <i class="fas" [class.fa-eye]="!showConfirmPassword" [class.fa-eye-slash]="showConfirmPassword"></i>
+          </button>
+        </div>
+        <div *ngIf="submitted && f['confirmPassword'].errors" class="invalid-feedback">
+          <div *ngIf="f['confirmPassword'].errors['required']">Password confirmation is required</div>
+          <div *ngIf="f['confirmPassword'].errors['mustMatch']">Passwords must match</div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary w-100" [disabled]="loading">
+        <span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
+        Sign Up
+      </button>
+    </form>
+
+    <div *ngIf="error" class="alert alert-danger mt-3">{{error}}</div>
+    <div *ngIf="success" class="alert alert-success mt-3">{{success}}</div>
+
+    <div class="auth-footer">
+      <p>Already have an account? <a routerLink="/login">Login</a></p>
+    </div>
+  </div>
+</div> 
