@@ -1,106 +1,138 @@
-<div class="admin-container">
-  <!-- Pending Signups Section -->
-  <div class="admin-card">
-    <div class="section-header">
-      <h2>Pending Sign-up Requests</h2>
-      <p>Review and process new signup requests</p>
-    </div>
+<div class="admin-layout">
+  <!-- Sidebar Navigation -->
+  <app-admin-sidenav
+    [currentSection]="currentSection"
+    [userCount]="userCount"
+    [pendingCount]="pendingCount"
+    [rejectedCount]="rejectedCount"
+    [deletedCount]="deletedCount"
+    (sectionChange)="setCurrentSection($event)">
+  </app-admin-sidenav>
 
-    <div class="pending-requests" *ngIf="pendingSignups.length > 0">
-      <div class="request-card" *ngFor="let signup of pendingSignups">
-        <div class="request-info">
-          <div class="email">
-            <i class="fas fa-envelope"></i>
-            {{ signup.email }}
-          </div>
-          <div class="date">
-            <i class="fas fa-clock"></i>
-            {{ signup.request_date | date:'medium' }}
-          </div>
-        </div>
-        <div class="request-actions">
-          <div class="role-select">
-            <select [(ngModel)]="signup.selectedRole">
-              <option [value]="UserRole.USER">User</option>
-              <option [value]="UserRole.OPERATOR">Operator</option>
-              <option [value]="UserRole.BOSS">Boss</option>
-              <option [value]="UserRole.CHIEF">Chief</option>
-              <option [value]="UserRole.ADMIN">Admin</option>
-            </select>
-          </div>
-          <button class="btn btn-approve" (click)="processSignup(signup.id, 'approve', signup.selectedRole)">
-            <i class="fas fa-check"></i> Approve
-          </button>
-          <button class="btn btn-reject" (click)="processSignup(signup.id, 'reject')">
-            <i class="fas fa-times"></i> Reject
-          </button>
+  <!-- Main Content Area -->
+  <div class="admin-layout__content">
+    <!-- Sections Container -->
+    <div class="sections-container">
+      <!-- Existing Users Section -->
+      <div class="admin-card" [class.visible]="currentSection === 'users'">
+        <app-existing-users
+          (roleDialogRequest)="openRoleDialog($event)"
+          (passwordDialogRequest)="openChangePasswordDialog($event)"
+          (deleteDialogRequest)="openDeleteDialog($event)">
+        </app-existing-users>
+      </div>
+
+      <!-- Pending Signups Section -->
+      <div class="admin-card" [class.visible]="currentSection === 'pending'">
+        <app-pending-signups
+          (roleDialogRequest)="openPendingRoleDialog($event)">
+        </app-pending-signups>
+      </div>
+
+      <!-- Rejected Accounts Section -->
+      <div class="admin-card" [class.visible]="currentSection === 'rejected'">
+        <app-rejected-accounts></app-rejected-accounts>
+      </div>
+
+      <!-- Deleted Accounts Section -->
+      <div class="admin-card" [class.visible]="currentSection === 'deleted'">
+        <app-deleted-accounts></app-deleted-accounts>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Password Change Dialog -->
+<div class="dialog-overlay" *ngIf="selectedUser && showPasswordDialog">
+  <div class="dialog">
+    <div class="dialog-header">
+      <h3>Change Password</h3>
+      <button class="btn-close" (click)="closePasswordDialog()">×</button>
+    </div>
+    <div class="dialog-content">
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <p>Change password for: <strong>{{ selectedUser.email }}</strong></p>
+      </div>
+      <div class="form-group">
+        <label for="newPassword">New Password</label>
+        <div class="password-input">
+          <i class="fas fa-key"></i>
+          <input 
+            type="password" 
+            id="newPassword"
+            [(ngModel)]="newPassword" 
+            placeholder="Enter new password"
+            class="form-control">
         </div>
       </div>
     </div>
-
-    <div class="no-requests" *ngIf="pendingSignups.length === 0">
-      <i class="fas fa-inbox"></i>
-      <p>No pending signup requests</p>
+    <div class="dialog-footer">
+      <button class="btn btn-secondary" (click)="closePasswordDialog()">Cancel</button>
+      <button class="btn btn-primary" (click)="changePassword()" [disabled]="!newPassword">Save Changes</button>
     </div>
   </div>
+</div>
 
-  <!-- Existing Users Section -->
-  <div class="admin-card">
-    <div class="section-header">
-      <h2>Existing Users</h2>
-      <p>Manage user accounts and privileges</p>
+<!-- Role Selection Dialog -->
+<div class="dialog-overlay" *ngIf="showRoleDialog" (click)="closeRoleDialog()">
+  <div class="dialog" (click)="$event.stopPropagation()">
+    <div class="dialog-header">
+      <h3>Select Role</h3>
+      <button class="btn-close" (click)="closeRoleDialog()">×</button>
     </div>
-
-    <div class="users-list" *ngIf="users.length > 0">
-      <div class="user-card" *ngFor="let user of users">
-        <div class="user-info">
-          <div class="email">
-            <i class="fas fa-user"></i>
-            {{ user.email }}
-          </div>
-          <div class="details">
-            <span class="role">
-              <i class="fas fa-shield-alt"></i>
-              {{ user.role }}
-            </span>
-            <span class="status" [class.active]="user.status === 'active'">
-              <i class="fas fa-circle"></i>
-              {{ user.status }}
-            </span>
-            <span class="date">
-              <i class="fas fa-calendar"></i>
-              {{ user.created_at | date:'mediumDate' }}
-            </span>
-          </div>
-        </div>
-        <div class="user-actions">
-          <div class="role-select">
-            <select [(ngModel)]="user.newRole" (change)="updateUser(user)">
-              <option [value]="UserRole.USER">User</option>
-              <option [value]="UserRole.OPERATOR">Operator</option>
-              <option [value]="UserRole.BOSS">Boss</option>
-              <option [value]="UserRole.CHIEF">Chief</option>
-              <option [value]="UserRole.ADMIN">Admin</option>
-            </select>
-          </div>
-          <button 
-            class="btn" 
-            [class.btn-deactivate]="user.status === 'active'"
-            [class.btn-activate]="user.status === 'inactive'"
-            (click)="toggleUserStatus(user)"
-          >
-            <i class="fas" [class.fa-lock]="user.status === 'active'" [class.fa-unlock]="user.status === 'inactive'"></i>
-            {{ user.status === 'active' ? 'Deactivate' : 'Activate' }}
-          </button>
-        </div>
+    <div class="dialog-content">
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <p>Select role for: <strong>{{ selectedUser?.email || selectedPendingSignup?.email }}</strong></p>
+      </div>
+      <div class="role-options">
+        <button class="btn btn-role-option" 
+                *ngFor="let role of roles" 
+                [class.selected]="tempSelectedRole === role"
+                (click)="selectRole(null, role)">
+          <i class="fas" [class]="getRoleIcon(role)"></i>
+          <span>{{ role }}</span>
+          <i class="fas fa-check check-icon" *ngIf="tempSelectedRole === role"></i>
+        </button>
       </div>
     </div>
-
-    <div class="no-users" *ngIf="users.length === 0">
-      <i class="fas fa-users"></i>
-      <p>No users found</p>
+    <div class="dialog-footer">
+      <button class="btn btn-secondary" (click)="closeRoleDialog()">Cancel</button>
+      <button class="btn btn-primary" (click)="saveRole()">Save Changes</button>
     </div>
   </div>
+</div>
 
-  <div *ngIf="error" class="alert alert-danger">{{error}}</div>
+<!-- Delete User Confirmation Dialog -->
+<div class="dialog-overlay" *ngIf="selectedUser && showDeleteDialog">
+  <div class="dialog">
+    <div class="dialog-header">
+      <h3>Delete User</h3>
+      <button class="btn-close" (click)="closeDeleteDialog()">×</button>
+    </div>
+    <div class="dialog-content">
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <p>Delete user: <strong>{{ selectedUser.email }}</strong>?</p>
+      </div>
+      <div class="warning-message">
+        <p>This account will be archived for 30 days before permanent deletion.</p>
+      </div>
+      <div class="form-group">
+        <label for="deletionReason">Reason (Optional)</label>
+        <textarea 
+          id="deletionReason"
+          [(ngModel)]="deletionReason" 
+          placeholder="Enter deletion reason..."
+          class="form-control"
+          rows="2">
+        </textarea>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn btn-secondary" (click)="closeDeleteDialog()">Cancel</button>
+      <button class="btn btn-danger" (click)="deleteUser()">Delete</button>
+    </div>
+  </div>
 </div> 

@@ -37,6 +37,13 @@ export interface DeletedUser {
   days_until_deletion: number;
 }
 
+export interface AdminCounts {
+  users: number;
+  pending: number;
+  rejected: number;
+  deleted: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -44,6 +51,18 @@ export class AdminService {
   private apiUrl = 'http://localhost:3000/api/admin';
 
   constructor(private http: HttpClient) {}
+
+  getCounts(): Observable<AdminCounts> {
+    return this.http.get<AdminCounts>(`${this.apiUrl}/counts`);
+  }
+
+  updateUserRole(userId: number, role: UserRole): Observable<any> {
+    return this.http.post(`${this.apiUrl}/update-user-role`, { userId, role });
+  }
+
+  updatePendingSignupRole(signupId: number, role: UserRole): Observable<any> {
+    return this.http.post(`${this.apiUrl}/update-pending-signup-role`, { signupId, role });
+  }
 
   getPendingSignups(): Observable<PendingSignup[]> {
     return this.http.get<PendingSignup[]>(`${this.apiUrl}/pending-signups`);
