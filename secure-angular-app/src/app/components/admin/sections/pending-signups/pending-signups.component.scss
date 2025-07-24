@@ -1,0 +1,30 @@
+@import "../shared/admin-sections.scss";
+
+/* Additional styles specific to pending signups */
+.info-item {
+  &.time-elapsed {
+    .value {
+      color: #ff9800;
+    }
+    i {
+      color: #ff9800;
+    }
+  }
+
+  &.request-time {
+    i {
+      color: #2196F3;
+    }
+  }
+}
+
+.selected-role {
+  background-color: #e3f2fd;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #bbdefb;
+
+  i {
+    color: #1976d2;
+  }
+}

@@ -1,0 +1,68 @@
+<div class="section-header">
+  <div class="header-left">
+    <h2>Deleted Accounts</h2>
+    <p>Review and manage deleted accounts (available for 30 days)</p>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-secondary" 
+            (click)="cleanupDeletedUsers()"
+            title="Remove all accounts deleted more than 30 days ago">
+      <i class="fas fa-broom"></i>
+      Clean Up Expired
+    </button>
+  </div>
+</div>
+
+<div class="users-list">
+  <div class="user-card" *ngFor="let user of deletedUsers">
+    <div class="user-info">
+      <div class="info-item email">
+        <i class="fas fa-user-slash"></i>
+        <div>
+          <span class="label">Email</span>
+          <span class="value">{{ user.email }}</span>
+        </div>
+      </div>
+      <div class="info-item role">
+        <i class="fas" [class]="getRoleIcon(user.role)"></i>
+        <div>
+          <span class="label">Previous Role</span>
+          <span class="value">{{ user.role }}</span>
+        </div>
+      </div>
+      <div class="info-item date">
+        <i class="fas fa-calendar"></i>
+        <div>
+          <span class="label">Deleted On</span>
+          <span class="value">{{ user.deleted_at | date:'medium' }}</span>
+        </div>
+      </div>
+      <div class="info-item time-left" [class.urgent]="user.days_until_deletion <= 5">
+        <i class="fas fa-clock"></i>
+        <div>
+          <span class="label">Days Until Permanent Deletion</span>
+          <span class="value">{{ user.days_until_deletion }} days</span>
+        </div>
+      </div>
+      <div class="info-item reason" *ngIf="user.deletion_reason">
+        <i class="fas fa-comment"></i>
+        <div>
+          <span class="label">Deletion Reason</span>
+          <span class="value">{{ user.deletion_reason }}</span>
+        </div>
+      </div>
+      <div class="buttons-group">
+        <button class="btn btn-icon btn-restore" 
+                (click)="revokeUserDeletion(user)"
+                title="Restore User">
+          <i class="fas fa-undo"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="no-users" [class.visible]="deletedUsers.length === 0">
+  <i class="fas fa-trash-alt"></i>
+  <p>No deleted accounts</p>
+</div>

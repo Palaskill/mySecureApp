@@ -1,0 +1,17 @@
+@import "../shared/admin-sections.scss";
+
+/* Additional styles specific to existing users */
+.info-item {
+  &.status {
+    &.active {
+      .value {
+        color: #48bb78;
+      }
+    }
+    &.inactive {
+      .value {
+        color: #dc3545;
+      }
+    }
+  }
+}

@@ -1,0 +1,91 @@
+@import "../shared/admin-sections.scss";
+
+/* Additional styles specific to rejected accounts */
+.info-item {
+  &.status {
+    i {
+      color: #dc3545;
+    }
+    .value {
+      color: #dc3545;
+    }
+  }
+
+  &.notes {
+    i {
+      color: #6c757d;
+    }
+    .value {
+      font-style: italic;
+    }
+  }
+}
+
+/* Role select dropdown */
+.role-select {
+  position: relative;
+
+  .options-dropdown {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    margin-bottom: 4px;
+    background: white;
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    overflow: hidden;
+
+    .option {
+      padding: 8px 35px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      position: relative;
+      transition: all 0.2s ease;
+
+      i {
+        position: absolute;
+        left: 12px;
+        font-size: 14px;
+      }
+
+      &:hover {
+        filter: brightness(0.95);
+      }
+
+      /* Role-specific styles */
+      &.user {
+        color: #4299e1;
+        background-color: #ebf8ff;
+        i { color: #4299e1; }
+      }
+      
+      &.operator {
+        color: #48bb78;
+        background-color: #f0fff4;
+        i { color: #48bb78; }
+      }
+      
+      &.boss {
+        color: #805ad5;
+        background-color: #faf5ff;
+        i { color: #805ad5; }
+      }
+      
+      &.chief {
+        color: #d69e2e;
+        background-color: #fffff0;
+        i { color: #d69e2e; }
+      }
+      
+      &.admin {
+        color: #e53e3e;
+        background-color: #fff5f5;
+        i { color: #e53e3e; }
+      }
+    }
+  }
+}

@@ -1,0 +1,58 @@
+<div class="section-header">
+  <div class="header-left">
+    <h2>Pending Sign-up Requests</h2>
+    <p>Review and process new signup requests</p>
+  </div>
+</div>
+
+<div class="users-list">
+  <div class="user-card" *ngFor="let signup of pendingSignups">
+    <div class="user-info">
+      <div class="info-item email">
+        <i class="fas fa-envelope"></i>
+        <div>
+          <span class="label">Email</span>
+          <span class="value">{{ signup.email }}</span>
+        </div>
+      </div>
+      <div class="info-item request-time">
+        <i class="fas fa-clock"></i>
+        <div>
+          <span class="label">Requested</span>
+          <span class="value">{{ signup.request_date | date:'medium' }}</span>
+        </div>
+      </div>
+      <div class="info-item time-elapsed">
+        <i class="fas fa-hourglass-half"></i>
+        <div>
+          <span class="label">Time Elapsed</span>
+          <span class="value">{{ getTimeElapsed(signup.request_date) }}</span>
+        </div>
+      </div>
+      <div class="buttons-group">
+        <button class="btn btn-icon btn-role" 
+                [class]="getRoleClass(signup.selectedRole)"
+                (click)="openPendingRoleDialog(signup)"
+                [title]="signup.selectedRole || 'Select Role'">
+          <i class="fas" [class]="getRoleIcon(signup.selectedRole)"></i>
+        </button>
+        <button class="btn btn-icon btn-approve" 
+                (click)="processSignup(signup.id, 'approve', signup.selectedRole)" 
+                [disabled]="!signup.selectedRole"
+                title="Approve">
+          <i class="fas fa-check"></i>
+        </button>
+        <button class="btn btn-icon btn-reject" 
+                (click)="processSignup(signup.id, 'reject')"
+                title="Reject">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="no-users" [class.visible]="pendingSignups.length === 0">
+  <i class="fas fa-inbox"></i>
+  <p>No pending signup requests</p>
+</div>

@@ -1,0 +1,20 @@
+<div class="sidebar">
+  <div class="sidebar-header">
+    <i class="fas fa-th-large"></i>
+    <span>Admin Dashboard</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div 
+      *ngFor="let item of navItems"
+      class="nav-item" 
+      [class.active]="currentSection === item.section"
+      (click)="setCurrentSection(item.section)"
+    >
+      <div class="nav-item-content">
+        <i [class]="item.icon"></i>
+        <span class="nav-item-text">{{ item.text }}</span>
+      </div>
+      <span class="badge" *ngIf="getCount(item.section) > 0">{{ getCount(item.section) }}</span>
+    </div>
+  </nav>
+</div>

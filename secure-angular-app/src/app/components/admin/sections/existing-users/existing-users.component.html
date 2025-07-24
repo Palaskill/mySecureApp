@@ -1,0 +1,107 @@
+<div class="section-header">
+  <div class="header-left">
+    <h2>Existing Users</h2>
+    <p>Manage user accounts and privileges</p>
+  </div>
+  <div class="filter-options">
+    <!-- Role select -->
+    <div class="filter-item">
+      <label>Role</label>
+      <div class="select-wrapper">
+        <select [(ngModel)]="selectedRoleFilter" (change)="applyFilters()" name="role">
+          <option value="">All Roles</option>
+          <option [value]="UserRole.USER">User</option>
+          <option [value]="UserRole.OPERATOR">Operator</option>
+          <option [value]="UserRole.BOSS">Boss</option>
+          <option [value]="UserRole.CHIEF">Chief</option>
+          <option [value]="UserRole.ADMIN">Admin</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Status select -->
+    <div class="filter-item">
+      <label>Status</label>
+      <div class="select-wrapper">
+        <select [(ngModel)]="selectedStatusFilter" (change)="applyFilters()" name="status">
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+    </div>
+    <div class="filter-item">
+      <label>Search</label>
+      <div class="search-input">
+        <i class="fas fa-search"></i>
+        <input type="text" [(ngModel)]="searchQuery" (input)="applyFilters()" placeholder="Search by email...">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Users list section -->
+<div class="users-list">
+  <div class="user-card" *ngFor="let user of filteredUsers" [attr.data-user-id]="user.id">
+    <div class="user-info">
+      <div class="info-item email">
+        <i class="fas fa-user"></i>
+        <div>
+          <span class="label">Email</span>
+          <span class="value">{{ user.email }}</span>
+        </div>
+      </div>
+      <div class="info-item role">
+        <i class="fas fa-shield-alt"></i>
+        <div>
+          <span class="label">Role</span>
+          <span class="value">{{ user.role.charAt(0).toUpperCase() + user.role.slice(1) }}</span>
+        </div>
+      </div>
+      <div class="info-item status" [class.active]="user.status === 'active'" [class.inactive]="user.status === 'inactive'">
+        <i class="fas fa-circle"></i>
+        <div>
+          <span class="label">Status</span>
+          <span class="value">{{ user.status.charAt(0).toUpperCase() + user.status.slice(1) }}</span>
+        </div>
+      </div>
+      <div class="info-item date">
+        <i class="fas fa-calendar"></i>
+        <div>
+          <span class="label">Created</span>
+          <span class="value">{{ user.created_at | date:'mediumDate' }}</span>
+        </div>
+      </div>
+      <div class="buttons-group">
+        <button class="btn btn-icon btn-role" 
+                (click)="openRoleDialog(user)"
+                [title]="'Change Role: ' + user.role">
+          <i class="fas" [class]="getRoleIcon(user.role)"></i>
+        </button>
+        <button class="btn btn-icon" 
+                [class.btn-deactivate]="user.status === 'active'" 
+                [class.btn-activate]="user.status === 'inactive'" 
+                (click)="toggleUserStatus(user)"
+                [title]="user.status === 'active' ? 'Deactivate' : 'Activate'">
+          <i class="fas" [class.fa-lock]="user.status === 'active'" [class.fa-unlock]="user.status === 'inactive'"></i>
+        </button>
+        <button class="btn btn-icon btn-password" 
+                (click)="openChangePasswordDialog(user)"
+                title="Change Password">
+          <i class="fas fa-key"></i>
+        </button>
+        <button class="btn btn-icon btn-delete" 
+                (click)="openDeleteDialog(user)"
+                [disabled]="user.role === 'admin'"
+                title="Delete User">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="no-users" [class.visible]="filteredUsers.length === 0">
+  <i class="fas fa-users"></i>
+  <p>No users found</p>
+</div>

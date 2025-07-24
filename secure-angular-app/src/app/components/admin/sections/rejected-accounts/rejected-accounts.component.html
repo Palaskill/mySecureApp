@@ -1,0 +1,71 @@
+<div class="section-header">
+  <div class="header-left">
+    <h2>Rejected Accounts</h2>
+    <p>Review and manage rejected accounts</p>
+  </div>
+</div>
+
+<div class="users-list">
+  <div class="user-card" *ngFor="let account of rejectedAccounts">
+    <div class="user-info">
+      <div class="info-item email">
+        <i class="fas fa-user-times"></i>
+        <div>
+          <span class="label">Email</span>
+          <span class="value">{{ account.email }}</span>
+        </div>
+      </div>
+      <div class="info-item status">
+        <i class="fas fa-ban"></i>
+        <div>
+          <span class="label">Status</span>
+          <span class="value">Rejected</span>
+        </div>
+      </div>
+      <div class="info-item date">
+        <i class="fas fa-calendar"></i>
+        <div>
+          <span class="label">Rejected Date</span>
+          <span class="value">{{ account.request_date | date:'mediumDate' }}</span>
+        </div>
+      </div>
+      <div class="info-item notes" *ngIf="account.notes">
+        <i class="fas fa-sticky-note"></i>
+        <div>
+          <span class="label">Notes</span>
+          <span class="value">{{ account.notes }}</span>
+        </div>
+      </div>
+      <div class="buttons-group">
+        <div class="role-select" (clickOutside)="selectedRejectedRoleIndex = -1">
+          <button class="btn btn-icon btn-role" 
+                  [class]="getRoleClass(account.selectedRole)"
+                  (click)="toggleRejectedRoleSelect(account.id)"
+                  [title]="account.selectedRole || 'Select Role'">
+            <i class="fas" [class]="getRoleIcon(account.selectedRole)"></i>
+          </button>
+          <div class="options-dropdown" *ngIf="selectedRejectedRoleIndex === account.id">
+            <div class="option" 
+                 *ngFor="let role of roles"
+                 [class]="getRoleClass(role)"
+                 (click)="selectRoleForAccount(account, role)">
+              <i class="fas" [class]="getRoleIcon(role)"></i>
+              <span>{{ role }}</span>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-icon btn-approve" 
+                (click)="reapproveAccount(account)"
+                [disabled]="!account.selectedRole"
+                title="Reapprove">
+          <i class="fas fa-redo"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="no-users" [class.visible]="rejectedAccounts.length === 0">
+  <i class="fas fa-ban"></i>
+  <p>No rejected accounts</p>
+</div>
