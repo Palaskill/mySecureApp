@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { AdminService, UserRole, User, PendingSignup } from '../../services/admin.service';
+import { AdminService, UserRole, User, PendingSignup, DeletedUser } from '../../services/admin.service';
 import { ToastService } from '../../services/toast.service';
 import { AuthService } from '../../services/auth.service';
 
-type AdminSection = 'users' | 'pending' | 'rejected';
+type AdminSection = 'users' | 'pending' | 'rejected' | 'deleted';
 
 interface ExtendedPendingSignup extends PendingSignup {
   selectedRole?: UserRole;
@@ -18,7 +18,9 @@ export class HomeComponent implements OnInit {
   isAdmin = false;
   currentSection: AdminSection = 'users';
   showRoleDialog = false;
+  showDeleteDialog = false;
   selectedUser: User | null = null;
+  selectedPendingSignup: ExtendedPendingSignup | null = null;
   roles = Object.values(UserRole);
   tempSelectedRole: UserRole | null = null;
   users: User[] = [];
@@ -33,6 +35,8 @@ export class HomeComponent implements OnInit {
   searchQuery = '';
   selectedPendingRoleIndex = -1;
   selectedRejectedRoleIndex = -1;
+  deletionReason = '';
+  deletedUsers: DeletedUser[] = [];
   roleOptions = [
     { value: UserRole.USER, icon: 'fa-user', label: 'User' },
     { value: UserRole.OPERATOR, icon: 'fa-cog', label: 'Operator' },
@@ -57,6 +61,7 @@ export class HomeComponent implements OnInit {
       this.loadUsers();
       this.loadPendingSignups();
       this.loadRejectedAccounts();
+      this.loadDeletedUsers();
     }
   }
 
@@ -76,6 +81,16 @@ export class HomeComponent implements OnInit {
       error: (err) => {
         console.error('Error loading rejected accounts:', err);
         this.toastService.showError('Failed to load rejected accounts');
+      }
+    });
+  }
+
+  private loadDeletedUsers() {
+    this.adminService.getDeletedUsers().subscribe({
+      next: (users) => this.deletedUsers = users,
+      error: (err) => {
+        console.error('Error loading deleted users:', err);
+        this.toastService.showError('Failed to load deleted users');
       }
     });
   }
@@ -112,16 +127,21 @@ export class HomeComponent implements OnInit {
     this.showRoleDialog = true;
   }
 
+  openPendingRoleDialog(signup: ExtendedPendingSignup) {
+    this.selectedPendingSignup = signup;
+    this.tempSelectedRole = signup.selectedRole || null;
+    this.showRoleDialog = true;
+  }
+
   closeRoleDialog() {
     this.showRoleDialog = false;
     this.selectedUser = null;
+    this.selectedPendingSignup = null;
     this.tempSelectedRole = null;
   }
 
   selectRole(user: User | null, role: UserRole) {
-    if (user) {
-      this.tempSelectedRole = role;
-    }
+    this.tempSelectedRole = role;
   }
 
   openChangePasswordDialog(user: User) {
@@ -185,9 +205,11 @@ export class HomeComponent implements OnInit {
     this.selectedPendingRoleIndex = this.selectedPendingRoleIndex === id ? -1 : id;
   }
 
-  selectRoleForPending(signup: ExtendedPendingSignup, role: UserRole) {
-    signup.selectedRole = role;
-    this.selectedPendingRoleIndex = -1;
+  selectRoleForPending(signup: ExtendedPendingSignup, role: UserRole | undefined) {
+    if (role) {
+      signup.selectedRole = role;
+      this.selectedPendingRoleIndex = -1;
+    }
   }
 
   toggleRejectedRoleSelect(id: number) {
@@ -197,18 +219,6 @@ export class HomeComponent implements OnInit {
   selectRoleForAccount(account: ExtendedPendingSignup, role: UserRole) {
     account.selectedRole = role;
     this.selectedRejectedRoleIndex = -1;
-    this.adminService.reapproveAccount(account.id, role).subscribe({
-      next: () => {
-        this.toastService.showSuccess('Account role updated successfully');
-        this.loadRejectedAccounts();
-        this.loadUsers();
-      },
-      error: (err: Error) => {
-        this.toastService.showError('Failed to update account role');
-        console.error('Error updating account role:', err);
-        account.selectedRole = undefined; // Reset on failure
-      }
-    });
   }
 
   processSignup(signupId: number, action: 'approve' | 'reject', role?: UserRole) {
@@ -224,6 +234,35 @@ export class HomeComponent implements OnInit {
         console.error(`Error ${action}ing signup:`, err);
       }
     });
+  }
+
+  openDeleteDialog(user: User) {
+    this.selectedUser = user;
+    this.deletionReason = '';
+    this.showDeleteDialog = true;
+  }
+
+  closeDeleteDialog() {
+    this.showDeleteDialog = false;
+    this.selectedUser = null;
+    this.deletionReason = '';
+  }
+
+  deleteUser() {
+    if (this.selectedUser) {
+      this.adminService.deleteUser(this.selectedUser.id, this.deletionReason).subscribe({
+        next: () => {
+          this.toastService.showSuccess('User deleted successfully');
+          this.closeDeleteDialog();
+          this.loadUsers();
+          this.loadDeletedUsers();
+        },
+        error: (err: Error) => {
+          this.toastService.showError('Failed to delete user');
+          console.error('Error deleting user:', err);
+        }
+      });
+    }
   }
 
   getRoleIcon(role?: UserRole | string): string {
@@ -245,6 +284,29 @@ export class HomeComponent implements OnInit {
     return new Date().toLocaleString();
   }
 
+  getTimeElapsed(date: string | Date): string {
+    const requestDate = new Date(date);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - requestDate.getTime()) / 1000);
+
+    if (diffInSeconds < 60) {
+      return `${diffInSeconds} seconds ago`;
+    }
+
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes} minute${diffInMinutes === 1 ? '' : 's'} ago`;
+    }
+
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) {
+      return `${diffInHours} hour${diffInHours === 1 ? '' : 's'} ago`;
+    }
+
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
+  }
+
   saveRole() {
     if (this.selectedUser && this.tempSelectedRole) {
       this.adminService.updateUser(
@@ -262,6 +324,40 @@ export class HomeComponent implements OnInit {
           console.error('Error updating role:', err);
         }
       });
+    } else if (this.selectedPendingSignup && this.tempSelectedRole) {
+      this.selectedPendingSignup.selectedRole = this.tempSelectedRole;
+      this.closeRoleDialog();
     }
+  }
+
+  revokeUserDeletion(deletedUser: DeletedUser) {
+    this.adminService.restoreUser(deletedUser.original_id).subscribe({
+      next: () => {
+        this.toastService.showSuccess('User restored successfully');
+        this.loadUsers();
+        this.loadDeletedUsers();
+      },
+      error: (err: Error) => {
+        this.toastService.showError('Failed to restore user');
+        console.error('Error restoring user:', err);
+      }
+    });
+  }
+
+  cleanupDeletedUsers() {
+    this.adminService.cleanupDeletedUsers().subscribe({
+      next: (response) => {
+        if (response.deletedCount > 0) {
+          this.toastService.showSuccess(`Cleaned up ${response.deletedCount} expired deleted user(s)`);
+        } else {
+          this.toastService.showInfo('No expired deleted users to clean up');
+        }
+        this.loadDeletedUsers();
+      },
+      error: (err: Error) => {
+        this.toastService.showError('Failed to clean up deleted users');
+        console.error('Error cleaning up deleted users:', err);
+      }
+    });
   }
 } 

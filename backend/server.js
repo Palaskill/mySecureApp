@@ -59,6 +59,9 @@ const requireAdmin = (req, res, next) => {
 // Initialize database tables
 async function initializeDatabase() {
   try {
+    // Enable event scheduler
+    await db.query('SET GLOBAL event_scheduler = ON');
+
     // Create users table
     await db.query(`
       CREATE TABLE IF NOT EXISTS users (
@@ -84,6 +87,37 @@ async function initializeDatabase() {
       )
     `);
 
+    // Create deleted_users table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS deleted_users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        original_id INT NOT NULL,
+        email VARCHAR(191) NOT NULL,
+        password VARCHAR(191) NOT NULL,
+        role ENUM('admin', 'user', 'operator', 'boss', 'chief'),
+        deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP,
+        deletion_reason TEXT,
+        INDEX idx_deleted_at (deleted_at),
+        INDEX idx_original_id (original_id)
+      )
+    `);
+
+    // Drop existing cleanup event if it exists
+    await db.query(`DROP EVENT IF EXISTS cleanup_deleted_users`);
+
+    // Create cleanup event
+    await db.query(`
+      CREATE EVENT cleanup_deleted_users
+      ON SCHEDULE EVERY 1 DAY
+      STARTS CURRENT_TIMESTAMP
+      DO
+      BEGIN
+        DELETE FROM deleted_users 
+        WHERE deleted_at < DATE_SUB(NOW(), INTERVAL 30 DAY);
+      END
+    `);
+
     // Check if admin user exists
     const [existingAdmins] = await db.query(
       'SELECT id FROM users WHERE email = ? AND role = "admin"',
@@ -102,6 +136,25 @@ async function initializeDatabase() {
       console.log('Admin user created successfully');
     } else {
       console.log('Admin user already exists');
+    }
+
+    // Verify event scheduler is running
+    const [eventSchedulerStatus] = await db.query('SELECT @@event_scheduler as status');
+    if (eventSchedulerStatus[0].status === 'ON') {
+      console.log('Event scheduler is running');
+    } else {
+      console.error('Failed to enable event scheduler');
+    }
+
+    // Verify cleanup event exists
+    const [events] = await db.query(`
+      SELECT * FROM information_schema.events 
+      WHERE event_name = 'cleanup_deleted_users'
+    `);
+    if (events.length > 0) {
+      console.log('Cleanup event created successfully');
+    } else {
+      console.error('Failed to create cleanup event');
     }
 
     console.log('Database initialized successfully');
@@ -409,6 +462,140 @@ app.post('/api/admin/change-user-password', authenticateJWT, requireAdmin, async
   } catch (error) {
     console.error('Change password error:', error);
     res.status(500).json({ message: 'Error changing password' });
+  }
+});
+
+// Delete user (admin only)
+app.post('/api/admin/delete-user', authenticateJWT, requireAdmin, async (req, res) => {
+  try {
+    const { userId, reason } = req.body;
+
+    // Validate input
+    if (!userId) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    // Check if user exists
+    const [existingUsers] = await db.query(
+      'SELECT * FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (existingUsers.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const userToDelete = existingUsers[0];
+
+    // Don't allow deleting own account
+    if (userToDelete.id === req.user.userId) {
+      return res.status(403).json({ message: 'Cannot delete own account' });
+    }
+
+    // Don't allow deleting other admin accounts
+    if (userToDelete.role === 'admin') {
+      return res.status(403).json({ message: 'Cannot delete admin accounts' });
+    }
+
+    // Move user to deleted_users table
+    await db.query(
+      'INSERT INTO deleted_users (original_id, email, password, role, created_at, deletion_reason) VALUES (?, ?, ?, ?, ?, ?)',
+      [userToDelete.id, userToDelete.email, userToDelete.password, userToDelete.role, userToDelete.created_at, reason || null]
+    );
+
+    // Delete user from users table
+    await db.query('DELETE FROM users WHERE id = ?', [userId]);
+
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ message: 'Error deleting user' });
+  }
+});
+
+// Get deleted users (admin only)
+app.get('/api/admin/deleted-users', authenticateJWT, requireAdmin, async (req, res) => {
+  try {
+    const [deletedUsers] = await db.query(
+      'SELECT id, original_id, email, role, deleted_at, created_at, deletion_reason FROM deleted_users ORDER BY deleted_at DESC'
+    );
+
+    // Calculate days until deletion for each user
+    const usersWithDaysLeft = deletedUsers.map(user => {
+      const deleteDate = new Date(user.deleted_at);
+      const thirtyDaysLater = new Date(deleteDate.getTime() + (30 * 24 * 60 * 60 * 1000));
+      const now = new Date();
+      const daysLeft = Math.ceil((thirtyDaysLater.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      return {
+        ...user,
+        days_until_deletion: Math.max(0, daysLeft)
+      };
+    });
+
+    res.json(usersWithDaysLeft);
+  } catch (error) {
+    console.error('Get deleted users error:', error);
+    res.status(500).json({ message: 'Error fetching deleted users' });
+  }
+});
+
+// Restore deleted user (admin only)
+app.post('/api/admin/restore-user', authenticateJWT, requireAdmin, async (req, res) => {
+  try {
+    const { originalId } = req.body;
+
+    // Get deleted user info
+    const [deletedUsers] = await db.query(
+      'SELECT * FROM deleted_users WHERE original_id = ?',
+      [originalId]
+    );
+
+    if (deletedUsers.length === 0) {
+      return res.status(404).json({ message: 'Deleted user not found' });
+    }
+
+    const deletedUser = deletedUsers[0];
+
+    // Check if email is already taken by another user
+    const [existingUsers] = await db.query(
+      'SELECT id FROM users WHERE email = ?',
+      [deletedUser.email]
+    );
+
+    if (existingUsers.length > 0) {
+      return res.status(400).json({ message: 'Email address is already in use' });
+    }
+
+    // Restore user to users table
+    await db.query(
+      'INSERT INTO users (id, email, password, role, status, created_at) VALUES (?, ?, ?, ?, "active", ?)',
+      [deletedUser.original_id, deletedUser.email, deletedUser.password, deletedUser.role, deletedUser.created_at]
+    );
+
+    // Remove from deleted_users table
+    await db.query('DELETE FROM deleted_users WHERE original_id = ?', [originalId]);
+
+    res.json({ message: 'User restored successfully' });
+  } catch (error) {
+    console.error('Restore user error:', error);
+    res.status(500).json({ message: 'Error restoring user' });
+  }
+});
+
+// Manual cleanup of deleted users (admin only)
+app.post('/api/admin/cleanup-deleted-users', authenticateJWT, requireAdmin, async (req, res) => {
+  try {
+    const [result] = await db.query(
+      'DELETE FROM deleted_users WHERE deleted_at < DATE_SUB(NOW(), INTERVAL 30 DAY)'
+    );
+
+    res.json({ 
+      message: 'Cleanup completed successfully',
+      deletedCount: result.affectedRows
+    });
+  } catch (error) {
+    console.error('Manual cleanup error:', error);
+    res.status(500).json({ message: 'Error during cleanup' });
   }
 });
 
