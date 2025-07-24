@@ -108,12 +108,50 @@
       <!-- Existing Users Section -->
       <div class="admin-card" [class.visible]="currentSection === 'users'">
         <div class="section-header">
+          <div class="header-left">
           <h2>Existing Users</h2>
           <p>Manage user accounts and privileges</p>
+          </div>
+          <div class="filter-options">
+            <!-- Role select -->
+            <div class="filter-item">
+              <label>Role</label>
+              <div class="select-wrapper">
+                <select [(ngModel)]="selectedRoleFilter" (change)="applyFilters()" name="role">
+                  <option value="">All Roles</option>
+                  <option [value]="UserRole.USER">User</option>
+                  <option [value]="UserRole.OPERATOR">Operator</option>
+                  <option [value]="UserRole.BOSS">Boss</option>
+                  <option [value]="UserRole.CHIEF">Chief</option>
+                  <option [value]="UserRole.ADMIN">Admin</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Status select -->
+            <div class="filter-item">
+              <label>Status</label>
+              <div class="select-wrapper">
+                <select [(ngModel)]="selectedStatusFilter" (change)="applyFilters()" name="status">
+                  <option value="">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+            <div class="filter-item">
+              <label>Search</label>
+              <div class="search-input">
+                <i class="fas fa-search"></i>
+                <input type="text" [(ngModel)]="searchQuery" (input)="applyFilters()" placeholder="Search by email...">
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="users-list" *ngIf="users.length > 0">
-          <div class="user-card" *ngFor="let user of users">
+        <!-- Users list section -->
+        <div class="users-list">
+          <div class="user-card" *ngFor="let user of filteredUsers" [attr.data-user-id]="user.id">
             <div class="user-info">
               <div class="info-item email">
                 <i class="fas fa-user"></i>
@@ -143,44 +181,30 @@
                   <span class="value">{{ user.created_at | date:'mediumDate' }}</span>
                 </div>
               </div>
-            </div>
-            <div class="user-actions">
-              <div class="role-select" (clickOutside)="selectedUserRoleIndex = -1">
-                <div class="selected-option" [class]="getRoleClass(user.newRole)" (click)="toggleUserRoleSelect(user.id)">
-                  <i class="fas" [class]="getRoleIcon(user.newRole)"></i>
-                  <span>{{ user.newRole }}</span>
-                  <i class="fas fa-chevron-down dropdown-arrow"></i>
-                </div>
-                <div class="options-dropdown" *ngIf="selectedUserRoleIndex === user.id">
-                  <div 
-                    class="option" 
-                    *ngFor="let option of roleOptions"
-                    [class]="getRoleClass(option.value)"
-                    (click)="selectRole(user, option.value)"
-                  >
-                    <i class="fas" [class]="option.icon"></i>
-                    <span>{{ option.label }}</span>
-                  </div>
-                </div>
+              <div class="buttons-group">
+                <button class="btn btn-icon btn-role" 
+                        (click)="openRoleDialog(user)"
+                        [title]="'Change Role: ' + user.role">
+                  <i class="fas" [class]="getRoleIcon(user.role)"></i>
+                </button>
+                <button class="btn btn-icon" 
+                        [class.btn-deactivate]="user.status === 'active'" 
+                        [class.btn-activate]="user.status === 'inactive'" 
+                        (click)="toggleUserStatus(user)"
+                        [title]="user.status === 'active' ? 'Deactivate' : 'Activate'">
+                  <i class="fas" [class.fa-lock]="user.status === 'active'" [class.fa-unlock]="user.status === 'inactive'"></i>
+                </button>
+                <button class="btn btn-icon btn-password" 
+                        (click)="openChangePasswordDialog(user)"
+                        title="Change Password">
+                  <i class="fas fa-key"></i>
+                </button>
               </div>
-              <button 
-                class="btn" 
-                [class.btn-deactivate]="user.status === 'active'"
-                [class.btn-activate]="user.status === 'inactive'"
-                (click)="toggleUserStatus(user)"
-              >
-                <i class="fas" [class.fa-lock]="user.status === 'active'" [class.fa-unlock]="user.status === 'inactive'"></i>
-                {{ user.status === 'active' ? 'Deactivate' : 'Activate' }}
-              </button>
-              <button class="btn btn-password" (click)="openChangePasswordDialog(user)">
-                <i class="fas fa-key"></i>
-                Change Password
-              </button>
             </div>
           </div>
         </div>
 
-        <div class="no-users" *ngIf="users.length === 0">
+        <div class="no-users" [class.visible]="filteredUsers.length === 0">
           <i class="fas fa-users"></i>
           <p>No users found</p>
         </div>
@@ -189,43 +213,78 @@
       <!-- Pending Signups Section -->
       <div class="admin-card" [class.visible]="currentSection === 'pending'">
         <div class="section-header">
-          <h2>Pending Sign-up Requests</h2>
-          <p>Review and process new signup requests</p>
+          <div class="header-left">
+            <h2>Pending Sign-up Requests</h2>
+            <p>Review and process new signup requests</p>
+          </div>
         </div>
 
-        <div class="pending-requests" *ngIf="pendingSignups.length > 0">
-          <div class="request-card" *ngFor="let signup of pendingSignups">
-            <div class="request-info">
-              <div class="email">
+        <div class="users-list">
+          <div class="user-card" *ngFor="let signup of pendingSignups">
+            <div class="user-info">
+              <div class="info-item email">
                 <i class="fas fa-envelope"></i>
-                {{ signup.email }}
+                <div>
+                  <span class="label">Email</span>
+                  <span class="value">{{ signup.email }}</span>
+                </div>
               </div>
-              <div class="date">
+              <div class="info-item status">
                 <i class="fas fa-clock"></i>
-                {{ signup.requestDate | date:'medium' }}
+                <div>
+                  <span class="label">Status</span>
+                  <span class="value">Pending</span>
+                </div>
               </div>
-            </div>
-            <div class="request-actions">
-              <div class="role-select">
-                <select [(ngModel)]="signup.selectedRole">
-                  <option [value]="UserRole.USER">User</option>
-                  <option [value]="UserRole.OPERATOR">Operator</option>
-                  <option [value]="UserRole.BOSS">Boss</option>
-                  <option [value]="UserRole.CHIEF">Chief</option>
-                  <option [value]="UserRole.ADMIN">Admin</option>
-                </select>
+              <div class="info-item date">
+                <i class="fas fa-calendar"></i>
+                <div>
+                  <span class="label">Requested</span>
+                  <span class="value">{{ signup.requestDate | date:'mediumDate' }}</span>
+                </div>
               </div>
-              <button class="btn btn-approve" (click)="processSignup(signup.id, 'approve', signup.selectedRole)">
-                <i class="fas fa-check"></i> Approve
-              </button>
-              <button class="btn btn-reject" (click)="processSignup(signup.id, 'reject')">
-                <i class="fas fa-times"></i> Reject
-              </button>
+              <div class="info-item time">
+                <i class="fas fa-clock"></i>
+                <div>
+                  <span class="label">Time</span>
+                  <span class="value">{{ signup.requestDate | date:'shortTime' }}</span>
+                </div>
+              </div>
+              <div class="buttons-group">
+                <div class="role-select" (clickOutside)="selectedPendingRoleIndex = -1">
+                  <button class="btn btn-icon btn-role" 
+                          [class]="getRoleClass(signup.selectedRole)"
+                          (click)="togglePendingRoleSelect(signup.id)"
+                          [title]="signup.selectedRole || 'Select Role'">
+                    <i class="fas" [class]="getRoleIcon(signup.selectedRole)"></i>
+                  </button>
+                  <div class="options-dropdown" *ngIf="selectedPendingRoleIndex === signup.id">
+                    <div class="option" 
+                         *ngFor="let role of roles"
+                         [class]="getRoleClass(role)"
+                         (click)="selectRoleForPending(signup, role)">
+                      <i class="fas" [class]="getRoleIcon(role)"></i>
+                      <span>{{ role }}</span>
+                    </div>
+                  </div>
+                </div>
+                <button class="btn btn-icon btn-approve" 
+                        (click)="processSignup(signup.id, 'approve', signup.selectedRole)" 
+                        [disabled]="!signup.selectedRole"
+                        title="Approve">
+                  <i class="fas fa-check"></i>
+                </button>
+                <button class="btn btn-icon btn-reject" 
+                        (click)="processSignup(signup.id, 'reject')"
+                        title="Reject">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="no-requests" *ngIf="pendingSignups.length === 0">
+        <div class="no-users" [class.visible]="pendingSignups.length === 0">
           <i class="fas fa-inbox"></i>
           <p>No pending signup requests</p>
         </div>
@@ -234,59 +293,62 @@
       <!-- Rejected Accounts Section -->
       <div class="admin-card" [class.visible]="currentSection === 'rejected'">
         <div class="section-header">
-          <h2>Rejected Accounts</h2>
-          <p>Review and manage rejected accounts</p>
+          <div class="header-left">
+            <h2>Rejected Accounts</h2>
+            <p>Review and manage rejected accounts</p>
+          </div>
         </div>
 
-        <div class="rejected-accounts" *ngIf="rejectedAccounts.length > 0">
-          <div class="request-card" *ngFor="let account of rejectedAccounts">
-            <div class="request-info">
-              <div class="email">
+        <div class="users-list">
+          <div class="user-card" *ngFor="let account of rejectedAccounts">
+            <div class="user-info">
+              <div class="info-item email">
                 <i class="fas fa-user-times"></i>
-                {{ account.email }}
+                <div>
+                  <span class="label">Email</span>
+                  <span class="value">{{ account.email }}</span>
+                </div>
               </div>
-              <div class="details">
-                <span class="date">
-                  <i class="fas fa-clock"></i>
-                  Rejected: {{ account.requestDate | date:'medium' }}
-                </span>
-                <span class="date">
-                  <i class="fas fa-calendar"></i>
-                  Requested: {{ account.requestDate | date:'medium' }}
-                </span>
-                <span class="notes" *ngIf="account.notes">
-                  <i class="fas fa-sticky-note"></i>
-                  {{ account.notes }}
-                </span>
+              <div class="info-item status">
+                <i class="fas fa-ban"></i>
+                <div>
+                  <span class="label">Status</span>
+                  <span class="value">Rejected</span>
+                </div>
               </div>
-            </div>
-            <div class="request-actions">
-              <div class="role-select" (clickOutside)="selectedRejectedRoleIndex = -1">
-                <div class="selected-option" [class]="getRoleClass(account.selectedRole)" (click)="toggleRejectedRoleSelect(account.id)">
+              <div class="info-item date">
+                <i class="fas fa-calendar"></i>
+                <div>
+                  <span class="label">Rejected Date</span>
+                  <span class="value">{{ account.requestDate | date:'mediumDate' }}</span>
+                </div>
+              </div>
+              <div class="info-item notes" *ngIf="account.notes">
+                <i class="fas fa-sticky-note"></i>
+                <div>
+                  <span class="label">Notes</span>
+                  <span class="value">{{ account.notes }}</span>
+                </div>
+              </div>
+              <div class="buttons-group">
+                <button class="btn btn-icon btn-role" 
+                        [class]="getRoleClass(account.selectedRole)"
+                        (click)="toggleRejectedRoleSelect(account.id)"
+                        [title]="account.selectedRole || 'Select Role'">
                   <i class="fas" [class]="getRoleIcon(account.selectedRole)"></i>
-                  <span>{{ account.selectedRole }}</span>
-                  <i class="fas fa-chevron-down dropdown-arrow"></i>
-                </div>
-                <div class="options-dropdown" *ngIf="selectedRejectedRoleIndex === account.id">
-                  <div 
-                    class="option" 
-                    *ngFor="let option of roleOptions"
-                    [class]="getRoleClass(option.value)"
-                    (click)="selectRoleForAccount(account, option.value)"
-                  >
-                    <i class="fas" [class]="option.icon"></i>
-                    <span>{{ option.label }}</span>
-                  </div>
-                </div>
+                </button>
+                <button class="btn btn-icon btn-approve" 
+                        (click)="reapproveAccount(account)"
+                        [disabled]="!account.selectedRole"
+                        title="Reapprove">
+                  <i class="fas fa-redo"></i>
+                </button>
               </div>
-              <button class="btn btn-approve" (click)="reapproveAccount(account)">
-                <i class="fas fa-redo"></i> Reapprove
-              </button>
             </div>
           </div>
         </div>
 
-        <div class="no-requests" *ngIf="rejectedAccounts.length === 0">
+        <div class="no-users" [class.visible]="rejectedAccounts.length === 0">
           <i class="fas fa-ban"></i>
           <p>No rejected accounts</p>
         </div>
@@ -327,6 +389,34 @@
       <button class="btn btn-primary" (click)="changePassword()" [disabled]="!newPassword">
         <i class="fas fa-save"></i> Save Changes
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- Role Selection Dialog -->
+<div class="dialog-overlay" *ngIf="showRoleDialog" (click)="closeRoleDialog()">
+  <div class="dialog" (click)="$event.stopPropagation()">
+    <div class="dialog-header">
+      <h3>Select Role</h3>
+      <button class="btn-close" (click)="closeRoleDialog()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="dialog-content">
+      <div class="role-options">
+        <button class="btn btn-role-option" 
+                *ngFor="let role of roles" 
+                [class.selected]="tempSelectedRole === role"
+                (click)="selectRole(selectedUser, role)">
+          <i class="fas" [class]="getRoleIcon(role)"></i>
+          <span>{{ role }}</span>
+          <i class="fas fa-check check-icon" *ngIf="tempSelectedRole === role"></i>
+        </button>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn btn-secondary" (click)="closeRoleDialog()">Cancel</button>
+      <button class="btn btn-primary" (click)="saveRole()">Save Changes</button>
     </div>
   </div>
 </div>

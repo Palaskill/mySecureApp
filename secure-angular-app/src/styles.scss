@@ -21,11 +21,8 @@ body {
 
 app-root {
   display: flex;
-  align-items: center;
-  justify-content: center;
   min-height: 100vh;
-  padding: 20px;
-  overflow: auto;
+  width: 100%;
 }
 
 /* Login specific styles */
@@ -39,6 +36,15 @@ app-login {
   top: 0;
   left: 0;
   overflow: hidden;
+}
+
+/* Home component styles */
+app-home {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* Regular auth container for signup */
